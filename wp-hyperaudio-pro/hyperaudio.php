@@ -1,9 +1,9 @@
 <?php
 /**
-* Plugin Name: Official Hyperaudio Plugin
+* Plugin Name: Official Hyperaudio Plugin (Pro Version)
 * Plugin URI: https://hyper.audio
-* Description: Hyperaudio Interactive Transcript Player – maximise your audio and video content's accessibility to humans and search engines.
-* Version: 1.0.13
+* Description: Hyperaudio Interactive Transcript Editor and Player – maximise your audio and video content's accessibility to humans and search engines.
+* Version: 0.1
 * Author: Mark Boas
 * Author URI: https://maboa.it 
 **/
