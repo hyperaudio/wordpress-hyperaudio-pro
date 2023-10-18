@@ -57,6 +57,23 @@ function hyperaudio_options_page()
 
   <style>
 
+html,
+      body {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      body > * {
+        flex-shrink: 0;
+      }
+      .div1 {
+        background-color: #5c88ed;
+      }
+      .div2 {
+        background-color: #90de90;
+        flex-grow: 1;
+      }
+
     
 
     /* Ensure the body and HTML fill the entire viewport height */
@@ -65,12 +82,18 @@ function hyperaudio_options_page()
       margin: 0;
       padding: 0;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
+    body > * {
+      flex-shrink: 0;
+    }
+     
     /* Create a flex container for the two panels */
     .container {
       display: flex;
-      height: 100%;
+      flex-grow: 1;
     }
 
     /* Style for the fixed-width side panel */
@@ -81,18 +104,19 @@ function hyperaudio_options_page()
 
     /* Style for the scrollable main panel */
     .main-panel {
-      flex: 1; /* Expand to fill the remaining space */
+      flex-grow: 1;
+      /* Expand to fill the remaining space */
       background-color: #ffffff; /* Set your background color */
       overflow: auto; /* Enable vertical scrolling when content overflows */
-      height: 100%;
     }
 
     .transcript-holder {
       display: flex; 
       justify-content: center; 
       background-color: #ffffff; 
-      height: 100%;
       overflow-y:scroll;
+      flex-grow: 1;
+      border: 4px black;
     }
 
     .hyperaudio-transcript {
@@ -104,8 +128,19 @@ function hyperaudio_options_page()
       max-height: 100vh;
     }
 
-    [contenteditable]:focus {
-      outline: 0px solid transparent;
+    /*[contenteditable]:focus {
+      outline: 4px solid blue;
+    }*/
+
+    .hyperaudio-transcript p {
+      font-size: 120%;
+    }
+
+    .panel-button {
+      padding:12px; 
+      margin:10px; 
+      font-size:150%; 
+      width:360px;
     }
     
   </style>
@@ -155,8 +190,8 @@ function hyperaudio_options_page()
           <deepgram-service></deepgram-service>
         </dialog>
 
-        <dialog id="captions-modal" style="position: absolute; left:600px" >
-          <div style="position:fixed; top:3px; padding-top:10px; padding-bottom:20px;background-color:#fff; width: 360px; border-bottom: 1px solid #000;">
+        <dialog id="captions-modal" style="position: absolute; top: 58px; left:calc(100% - 390px);" >
+          <div style="position:fixed; top:32px; padding-top:10px; padding-bottom:20px;background-color:#fff; width: 360px; border-bottom: 1px solid #000;">
             <div>
               <button id="close-captions-button" style="float:right; text-decoration:none; border: 0; background-color: #fff; margin-bottom:16px; margin-bottom:16px">&#x2715;</button>
             </div>
@@ -169,9 +204,13 @@ function hyperaudio_options_page()
           </div>
         </dialog>
 
-        <button id="transcribe-media" style="padding:16px; margin:20px; font-size:150%; width:360px">choose a file to transcribe</button>
+        <button id="transcribe-media" class="panel-button">transcribe media</button>
 
-        <button id="edit-captions" style="padding:16px; margin:20px; font-size:150%; width:360px">edit captions</button>
+        <button id="edit-transcript" class="panel-button">edit transcript</button>
+
+        <button id="edit-captions" class="panel-button">edit captions</button>
+
+        <button id="publish-transcript" class="panel-button">publish transcript & media</button>
 
         <script>
         const transcribeButton = document.querySelector('#transcribe-media');
@@ -183,6 +222,13 @@ function hyperaudio_options_page()
 
         transcribeCloseDialog.addEventListener("click", () => {
           transcribeDialog.close();
+        });
+
+        const editTranscriptButton = document.querySelector('#edit-transcript');
+        //const transcriptEditor = document.querySelector('#hypertranscript');
+
+        editTranscriptButton.addEventListener("click", () => {
+          document.querySelector('#hypertranscript').focus();
         });
 
         const editCaptionsButton = document.querySelector('#edit-captions');
@@ -218,7 +264,7 @@ function hyperaudio_options_page()
         </div>
       </div>
     </div>
-    <div class="main-panel" style="z-index: 2">
+    <div class="main-panel" style="background-color:#f0f0f1" >
       <!--<div class="navbar bg-base-100" style="background-color: #ffffff; opacity:0.95;">
         <div class="navbar-start">
           <button id="sidebar-toggle" class="btn btn-square btn-outline" aria-label="Toggle Sidebar">
@@ -300,10 +346,9 @@ function hyperaudio_options_page()
           </div>
         </div>
       </div>-->
-      <div class="transcript-holder">
+      <div class="transcript-holder" style="width: 420px">
 
         <div id="hypertranscript" class="hyperaudio-transcript" contenteditable="true">
-          <!-- example data -->
           <article>
             <section>
               <p>
@@ -1081,13 +1126,30 @@ function hyperaudio_options_page()
       let startTime = countSeconds(elem.parentElement.parentElement.querySelector('.start').value);
       let endTime = countSeconds(elem.parentElement.parentElement.querySelector('.end').value);
       let duration = endTime - startTime;
+      console.log(endTime);
+      console.log(startTime);
+      console.log(duration);
+
 
       document.querySelector('video').currentTime = startTime;
       document.querySelector('video').play();
 
-      setTimeout(() => {
-        document.querySelector('video').pause();
-      }, duration*1000);
+      /*document.querySelector('video').addEventListener("play", (event) => {
+        setTimeout(() => {
+          document.querySelector('video').pause();
+        }, duration*1000);
+        this.removeEventListener('click', arguments.callee, false);
+      });*/
+
+      let timer = setInterval(function(){
+
+        console.log("tick");
+        if(document.querySelector('video').currentTime > endTime){
+          document.querySelector('video').pause();
+          clearInterval(timer);
+        }
+      },100);
+      
     }
 
     function seekTo(elem) {
@@ -1179,8 +1241,8 @@ function hyperaudio_options_page()
             )
         );*/
 
-      document.querySelector('#download-vtt').setAttribute('href', "data:text/vtt,"+encodeURIComponent(vttCaptions));
-      document.querySelector('#download-srt').setAttribute('href', "data:text/srt,"+encodeURIComponent(srtCaptions));
+      //document.querySelector('#download-vtt').setAttribute('href', "data:text/vtt,"+encodeURIComponent(vttCaptions));
+      //document.querySelector('#download-srt').setAttribute('href', "data:text/srt,"+encodeURIComponent(srtCaptions));
     }
 
     function convertTimecodeToSrt(timecode) {
