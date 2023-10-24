@@ -22,8 +22,10 @@ function check_ajax( ) {
 	$author_id = 1;
 	$slug = 'example-post';
 	$title = isset($_POST['titleText']) ? sanitize_text_field($_POST['titleText']) : '';
-  $transcript = $_POST['transcript'];// ? sanitize_text_field($_POST['transcript']) : '';
-
+  $transcript = isset($_POST['transcript']) ? $_POST['transcript'] : '';
+  $transcript = str_replace(' class=\"unread\"', '', $transcript);
+  $media = isset($_POST['mediaUrl']) ? $_POST['mediaUrl'] : '';
+  $player = isset($_POST['playerType']) ? $_POST['playerType'] : '';
 
 
 	// If the page doesn't already exist, then create it
@@ -39,11 +41,11 @@ function check_ajax( ) {
 				'post_title'		=>	$title,
 				'post_status'		=>	'publish',
 				'post_type'		=>	'post',
-        'post_content'  => '<!-- wp:shortcode -->[hyperaudio src=""]'.$transcript.'[/hyperaudio]<!-- /wp:shortcode -->'
+        'post_content'  => '<!-- wp:shortcode -->[hyperaudio src="'.$media.'" player="'.$player.'"]'.$transcript.'[/hyperaudio]<!-- /wp:shortcode -->'
 			)
 		);
 
-    echo("post created ok");
+    
 
 	// Otherwise, we'll stop
 	} else {
@@ -258,6 +260,24 @@ html,
           <div id="caption-editor" style="margin-top:60px">
             <center>Preparing captions....</center>
           </div>
+        </dialog>
+
+        <dialog id="publish-details">
+            <form>
+              <label for="post-title">Post title:</label><br>
+              <input type="text" id="post-title" name="post-title" value=""><br>
+              <label for="media-url">Link to audio/video file:</label><br>
+              <input type="text" id="media-url" name="media-url" value=""><br>
+              <label for="player-type">Player type:</label><br>
+              <select name="player-type" id="player-type">
+                <option value="native">Web Native (mp3, mp4 etc)</option>
+                <option value="youtube">YouTube Embed</option>
+                <option value="soundcloud">Soundcloud Embed</option>
+                <option value="vimeo">Vimeo Embed</option>
+                <option value="videojs">VideoJS Player</option>
+              </select><br>
+            </form>
+            <button onclick="publishPost()">Publish</button> 
         </dialog>
 
         <button id="transcribe-media" class="panel-button">transcribe media</button>
@@ -1312,11 +1332,13 @@ html,
     //document.querySelector('#regenerate-btn').addEventListener('click', hyperaudioGenerateCaptionsFromTranscript);
 
 
-
     function createPost() {
+      document.querySelector('#media-url').value = document.querySelector('#hyperplayer').src;
+      document.querySelector('#publish-details').showModal();
+    }
+
+    function publishPost() {
       let transcriptHtml = document.querySelector('#hypertranscript').innerHTML;
-      console.log(transcriptHtml);
-      //transcriptHtml = "&lt;div&gt;scoob&lt;/div&gt;";
 
       jQuery.ajax({
           type: 'POST',
@@ -1325,11 +1347,14 @@ html,
               action: 'check_ajax',
               fail_message: account_script_checker.fail_message,
               success_message: account_script_checker.success_message,
-              titleText: 'scooooooooooooby',
+              titleText: document.querySelector('#post-title').value,
+              mediaUrl: document.querySelector('#media-url').value,
+              playerType: document.querySelector('#player-type').value,
               transcript: transcriptHtml
           },
           beforeSend: function ( ) {
               jQuery( 'body' ).html( account_script_checker.loading_message );
+              document.querySelector("#publish-details").close();
           },
           success: function ( data, textStatus, XMLHttpRequest ) {
               if( data === 'failed_to_create_post' ) {
@@ -1344,6 +1369,7 @@ html,
       });
     }
 
+    
 
   </script>
   <!-- end of caption editor additions -->

@@ -180,7 +180,7 @@ function hyperaudioPlayer(playerType, instance) {
   if (playerType !== null && playerType !== undefined) {
     return new playerType(instance);
   } else {
-    alert("data-player-type attribute must be set on player if not native, eg SoundCloud, YouTube, Vimeo, VideoJS")
+    console.warn("data-player-type attribute should be set on player if not native, eg SoundCloud, YouTube, Vimeo, VideoJS");
   }
 }
 
