@@ -1,5 +1,5 @@
 /*! (C) The Hyperaudio Project. MIT @license: en.wikipedia.org/wiki/MIT_License. */
-/*! Version 2.1.3 */
+/*! Version 2.1.5 */
 
 'use strict';
 
@@ -180,7 +180,7 @@ function hyperaudioPlayer(playerType, instance) {
   if (playerType !== null && playerType !== undefined) {
     return new playerType(instance);
   } else {
-    console.warn("data-player-type attribute should be set on player if not native, eg SoundCloud, YouTube, Vimeo, VideoJS");
+    console.warn("HYPERAUDIO LITE WARNING: data-player-type attribute should be set on player if not native, eg SoundCloud, YouTube, Vimeo, VideoJS");
   }
 }
 
