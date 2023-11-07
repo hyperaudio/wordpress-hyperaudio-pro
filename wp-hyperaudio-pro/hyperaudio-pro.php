@@ -247,7 +247,7 @@ function hyperaudio_action_links($links, $file)
   // check to make sure we are on the correct plugin
   if ($file == $this_plugin) {
     // the anchor tag and href to the URL we want. For a "Settings" link, this needs to be the url of your settings page
-    $settings_link = '<a href="' . esc_url( get_bloginfo('wpurl') ) . '/wp-admin/options-general.php?page=wp-hyperaudio-pro/hyperaudio-admin.php">Settings</a>';
+    $settings_link = '<a href="' . esc_url( get_bloginfo('wpurl') ) . '/wp-admin/options-general.php?page=wp-hyperaudio-pro/hyperaudio-pro-admin.php">Settings</a>';
     // add the link to the list
     array_unshift($links, $settings_link);
   }
@@ -255,5 +255,5 @@ function hyperaudio_action_links($links, $file)
 }
 
 if (is_admin()) {
-  require('hyperaudio-admin.php');
+  require('hyperaudio-pro-admin.php');
 }
