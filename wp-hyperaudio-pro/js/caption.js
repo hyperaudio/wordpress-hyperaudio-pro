@@ -1,5 +1,5 @@
 /*! (C) The Hyperaudio Project. MIT @license: en.wikipedia.org/wiki/MIT_License. */
-/*! Version 2.1.3 */
+/*! Version 2.1.3 patch*/
 'use strict';
 
 var caption = function () {
@@ -326,7 +326,9 @@ var caption = function () {
         video.removeEventListener("loadedmetadata", listener, true);
       }, true);
   
-      video.textTracks[0].mode = "showing";
+      if (video.textTracks !== undefined) {
+        video.textTracks[0].mode = "showing";
+      }
     }
 
     function captionsObj(vtt, srt, data) {

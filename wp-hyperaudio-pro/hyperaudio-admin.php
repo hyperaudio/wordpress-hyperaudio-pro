@@ -1,5 +1,70 @@
 <?php
 
+function hook_ajax( ){
+  wp_enqueue_script( 'script-checker', plugin_dir_url( __FILE__ ) . 'js/script-checker.js' );
+  wp_localize_script( 'script-checker', 'account_script_checker', array(
+          'ajaxurl' => admin_url( 'admin-ajax.php' ),
+          'fail_message' => __('Connection to server failed.', 'script-checker'),
+          'success_message' => __('Connection successful. ', 'script-checker')
+      )
+  );
+}
+add_action( 'enqueue_scripts', 'hook_ajax' );
+add_action( 'admin_enqueue_scripts', 'hook_ajax' );
+
+function check_ajax( ) {
+  // entry here your function for ajax request
+
+
+  $post_id = -1;
+
+	// Setup the author, slug, and title for the post
+	$author_id = 1;
+	$slug = 'example-post';
+	$title = isset($_POST['titleText']) ? sanitize_text_field($_POST['titleText']) : '';
+  $transcript = isset($_POST['transcript']) ? $_POST['transcript'] : '';
+  $transcript = str_replace(' class=\"unread\"', '', $transcript);
+  $media = isset($_POST['mediaUrl']) ? $_POST['mediaUrl'] : '';
+  $player = isset($_POST['playerType']) ? $_POST['playerType'] : '';
+
+  $optional_params = '';
+  if (isset($_POST['width']) ) $optional_params .= ' width="'.$_POST['width'].'"';
+  if (isset($_POST['height']) ) $optional_params .= ' height="'.$_POST['height'].'"';
+  if (isset($_POST['mediaHeight']) ) $optional_params .= ' media-height="'.$_POST['mediaHeight'].'"';
+  if (isset($_POST['transcriptHeight']) ) $optional_params .= ' transcript-height="'.$_POST['transcriptHeight'].'"';
+  if (isset($_POST['fontFamily']) ) $optional_params .= ' font-family="'.$_POST['fontFamily'].'"';
+  if (isset($_POST['showActive']) ) $optional_params .= ' show-active="'.$_POST['showActive'].'"';
+ 
+	// If the page doesn't already exist, then create it
+	if( null == get_page_by_title( $title ) ) {
+
+		// Set the post ID so that we know the post was created successfully
+		$post_id = wp_insert_post(
+			array(
+				'comment_status'	=>	'closed',
+				'ping_status'		=>	'closed',
+				'post_author'		=>	$author_id,
+				'post_name'		=>	$slug,
+				'post_title'		=>	$title,
+				'post_status'		=>	'publish',
+				'post_type'		=>	'post',
+        'post_content'  => '<!-- wp:shortcode -->[hyperaudio src="'.$media.'" player="'.$player.'"'.$optional_params.']'.$transcript.'[/hyperaudio]<!-- /wp:shortcode -->'
+			)
+		);
+
+    
+
+	// Otherwise, we'll stop
+	} else {
+
+    // Arbitrarily use -2 to indicate that the page with the title already exists
+    $post_id = -2;
+
+	} // end if
+}
+
+add_action( 'wp_ajax_check_ajax', 'check_ajax' );
+
 add_action('admin_menu', 'hyperaudio_add_option_page');
 
 function hyperaudio_add_option_page()
@@ -204,13 +269,59 @@ html,
           </div>
         </dialog>
 
+        <dialog id="publish-details" style="width:400px">
+          <button id="close-publish-button" style="float:right; text-decoration:none; border: 0; background-color: #fff" onclick="document.querySelector('#publish-details').close()">&#x2715;</button>
+          <form>
+            <h3>Post Details</h3>
+            <label for="publish-post-title">Post Title</label><br>
+            <input type="text" id="publish-post-title" value="" size="42">
+            <hr>
+            <label for="publish-media-url">Link to Audio/Video File</label><br>
+            <input type="text" id="publish-media-url" value="" size="42">
+            <hr>
+            <label for="publish-player-type">Player Type</label><br>
+            <select id="publish-player-type">
+              <option value="native">Web Native (mp3, mp4 etc)</option>
+              <option value="youtube">YouTube Embed</option>
+              <option value="soundcloud">Soundcloud Embed</option>
+              <option value="vimeo">Vimeo Embed</option>
+              <option value="videojs">VideoJS Player</option>
+            </select>
+            <hr>
+            <h3>Optional Details <span style="font-size:80%; float:right;"><a href id="publish-show-options" onclick="this.style.display = 'none'; document.querySelector('#publish-optional-details').style.display = 'block'; document.querySelector('#publish-hide-options').style.display = 'block'; return false;";>show</a><a href id="publish-hide-options" style="display:none" onclick="this.style.display = 'none'; document.querySelector('#publish-optional-details').style.display = 'none'; document.querySelector('#publish-show-options').style.display = 'block'; return false;";>hide</a></span></h3>
+            <div id="publish-optional-details" style="display:none">
+              <label for="publish-width">Transcript + Media Holder Width</label><br>
+              <input type="text" id="publish-width" value="" size="8">
+              <hr>
+              <label for="publish-height">Media Holder Height</label><br>
+              <input type="text" id="publish-height" value="" size="8">
+              <hr>
+              <label for="publish-media-height">Media Height</label><br>
+              <input type="text" id="publish-media-height" value="" size="8">
+              <hr>
+              <label for="publish-transcript-height">Transcript Height</label><br>
+              <input type="text" id="publish-transcript-height" value="" size="8">
+              <hr>
+              <label for="publish-font-family">Font Family</label><br>
+              <input type="text" id="publish-font-family" value="" size="42">
+              <hr>
+              <label for="publish-show-active">Highlight Active Word</label>
+              <input type="checkbox" id="publish-show-active" value="true">
+            </div>
+            <hr>
+            
+          </form>
+          <button onclick="publishPost()" style="float:right; padding:10px; font-weight:bold">Publish</button> 
+          
+        </dialog>
+
         <button id="transcribe-media" class="panel-button">transcribe media</button>
 
         <button id="edit-transcript" class="panel-button">edit transcript</button>
 
         <button id="edit-captions" class="panel-button">edit captions</button>
 
-        <button id="publish-transcript" class="panel-button">publish transcript & media</button>
+        <button id="publish-transcript" class="panel-button" onclick="createPost()">publish transcript & media</button>
 
         <script>
         const transcribeButton = document.querySelector('#transcribe-media');
@@ -1142,8 +1253,6 @@ html,
       });*/
 
       let timer = setInterval(function(){
-
-        console.log("tick");
         if(document.querySelector('video').currentTime > endTime){
           document.querySelector('video').pause();
           clearInterval(timer);
@@ -1256,6 +1365,52 @@ html,
     }
 
     //document.querySelector('#regenerate-btn').addEventListener('click', hyperaudioGenerateCaptionsFromTranscript);
+
+
+    function createPost() {
+      document.querySelector('#publish-media-url').value = document.querySelector('#hyperplayer').src;
+      document.querySelector('#publish-details').showModal();
+    }
+
+    function publishPost() {
+      let transcriptHtml = document.querySelector('#hypertranscript').innerHTML;
+
+      jQuery.ajax({
+          type: 'POST',
+          url: account_script_checker.ajaxurl,
+          data: {
+              action: 'check_ajax',
+              fail_message: account_script_checker.fail_message,
+              success_message: account_script_checker.success_message,
+              titleText: document.querySelector('#publish-post-title').value,
+              mediaUrl: document.querySelector('#publish-media-url').value,
+              playerType: document.querySelector('#publish-player-type').value,
+              width: document.querySelector('#publish-width').value,
+              height: document.querySelector('#publish-height').value,
+              mediaHeight: document.querySelector('#publish-media-height').value,
+              transcriptHeight: document.querySelector('#publish-transcript-height').value,
+              fontFamily: document.querySelector('#publish-font-family').value,
+              showActive: document.querySelector('#publish-show-active').value,
+              transcript: transcriptHtml
+          },
+          beforeSend: function ( ) {
+              jQuery( 'body' ).html( account_script_checker.loading_message );
+              document.querySelector("#publish-details").close();
+          },
+          success: function ( data, textStatus, XMLHttpRequest ) {
+              if( data === 'failed_to_create_post' ) {
+                  console.log("failed");
+              } else {
+                  console.log("ok");
+              }
+          },
+          error: function ( XMLHttpRequest, textStatus, errorThrown ) {
+              alert( errorThrown );
+          }
+      });
+    }
+
+    
 
   </script>
   <!-- end of caption editor additions -->
