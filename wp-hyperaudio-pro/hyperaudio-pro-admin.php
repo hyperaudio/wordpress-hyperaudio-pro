@@ -70,13 +70,13 @@ add_action('admin_menu', 'hyperaudio_add_option_page');
 function hyperaudio_add_option_page()
 {
 	// hook in the options page function
-	add_options_page('Official Hyperaudio Plugin', 'hyperaudio', 'manage_options',  __FILE__, 'hyperaudio_options_page');
+	add_options_page('Official Hyperaudio Pro Plugin', 'Hyperaudio Pro', 'manage_options',  __FILE__, 'hyperaudio_options_page');
 }
 
 
 function hyperaudio_load_admin_script($hook)
 {
-	if ($hook != 'settings_page_wp-hyperaudio-pro/hyperaudio-admin') {
+	if ($hook != 'settings_page_wp-hyperaudio-pro/hyperaudio-pro-admin') {
 		return;
 	}
 
