@@ -8,10 +8,11 @@ class DeepgramService extends HTMLElement {
   }
 
   configureLanguage() {
+    const select = document.querySelector('#language');
 
     populateLanguageDeepgram();
 
-    const selectModel = document.querySelector('#deepgram-form #language-model');
+    const selectModel = document.querySelector('#language-model');
     const optionLanguageModel = {
       "General": "general",
       "Whisper (Tiny)": "whisper-tiny",
@@ -69,7 +70,7 @@ class DeepgramService extends HTMLElement {
   }
 
   updateDropdowns(event) {
-    let model = document.querySelector('#deepgram-form #language-model').value;
+    let model = document.querySelector('#language-model').value;
 
     // update languages depending on model
     if (model.startsWith("whisper")){
@@ -133,8 +134,8 @@ class DeepgramService extends HTMLElement {
       "uk_general": ["base"]
     }
 
-    let model = document.querySelector('#deepgram-form #language-model').value;
-    let lang = document.querySelector('#deepgram-form #language').value;
+    let model = document.querySelector('#language-model').value;
+    let lang = document.querySelector('#language').value;
     let tiers = deepgramModelCompatibility[lang+"_"+model];
 
     let options = document.querySelector('#tier').options;
@@ -148,7 +149,11 @@ class DeepgramService extends HTMLElement {
   }
 
   getData(event) {
+
+    document.querySelector('#deepgram-dialog').close();
+
     document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><center>Transcribing....</center><br/><img src="'+transcribingSvg+'" width="50" alt="transcribing" style="margin: auto; display: block;"></div>';
+
     const language = document.querySelector('#language').value;
     const model = document.querySelector('#language-model').value;
     let media =  document.querySelector('#media').value;
@@ -172,62 +177,70 @@ class DeepgramService extends HTMLElement {
         document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><img src="'+errorSvg+'" width="50" alt="error" style="margin: auto; display: block;"><br/><center>Please include both a link to the media and token in the form. </center></div>';
       }
     }
+    
+    event.preventDefault();
+    return false;
   }
 
   connectedCallback() {
+    this.innerHTML = `
+    <button id="close-transcribe-button" style="float:right; text-decoration:none; border: 0; background-color: #fff">&#x2715;</button>
+    <form id="deepgram-form" name="deepgram-form">
+      <div>
 
-    let template = null;
-    let modal = this;
+        <h3 class="font-bold text-lg">Transcribe</h3>
+        <input id="token" type="text" placeholder="Deepgram token"  />
 
-    const templateUrl = this.getAttribute("templateUrl");
-    const templateSelector = this.getAttribute("templateSelector");
+        <hr/>
 
-    console.log(templateUrl);
-    console.log(templateSelector);
+        <input id="media" type="text" placeholder="Link to media" />
+        <span class="label-text">or</span>
+        <input id="file" name="file" type="file" />
 
-    if (templateUrl !== null) {
-      fetch(templateUrl)
-        .then(function(response) {
-            // When the page is loaded convert it to text
-            return response.text()
-        })
-        .then(function(html) {
-          // Initialize the DOM parser
-          let parser = new DOMParser();
+        <hr/>
 
-          // Parse the text
-          template = parser.parseFromString(html, "text/html");
-          let deepgramTempl = template.querySelector('#deepgram-modal-template').cloneNode(true);
-          modal.innerHTML = deepgramTempl.innerHTML;
-          modal.configureLanguage();
-          addModalEventListeners(modal);
-        })
-        .catch(function(err) {  
-          console.log('Template error: ', err);  
-        });
-    } else {
-      modal.innerHTML = document.querySelector(templateSelector).innerHTML;
-      document.querySelector(templateSelector).remove();
-      modal.configureLanguage();
-      addModalEventListeners(modal);
-    }
+        <span class="label-text">Model</span>
+        <select id="language-model" name="language-model" placeholder="language-model">
+        </select>
+
+        <hr/>
+
+        <span class="label-text">Language</span>
+        <select id="language" name="language" placeholder="language">
+        </select>
+
+        <hr/>
+
+        <span class="label-text">Quality</span>
+        <select id="tier" name="tier" placeholder="tier">
+          <option value="base">Base</option>
+          <option value="enhanced">Enhanced (Better)</option>
+          <option value="nova">Nova (Best)</option>
+        </select>
+
+      </div>
+      <hr/>
+      <div class="modal-action">
+        <button id="transcribe-btn" style="float:right">Transcribe</button>
+      </div>
+    </form>`;
+
+    document.querySelector('#file').addEventListener('change',this.clearMediaUrl);
+    document.querySelector('#media').addEventListener('change',this.clearFilePicker);
+    document.querySelector('#transcribe-btn').addEventListener('click', this.getData);
+    document.querySelector('#file').addEventListener('change', this.updatePlayerWithLocalFile);
+    document.querySelector('#language-model').addEventListener('change', this.updateDropdowns);
+    document.querySelector('#language-model').addEventListener('change', this.updateTierDropdown);
+    document.querySelector('#language').addEventListener('change', this.updateTierDropdown);
+
+    this.configureLanguage();
   }
 }
 
 customElements.define('deepgram-service', DeepgramService);
 
-function addModalEventListeners(modal) {
-  document.querySelector('#file').addEventListener('change',modal.clearMediaUrl);
-  document.querySelector('#media').addEventListener('change',modal.clearFilePicker);
-  document.querySelector('#transcribe-btn').addEventListener('click', modal.getData);
-  document.querySelector('#file').addEventListener('change', modal.updatePlayerWithLocalFile);
-  document.querySelector('#language-model').addEventListener('change', modal.updateDropdowns);
-  document.querySelector('#language-model').addEventListener('change', modal.updateTierDropdown);
-  document.querySelector('#language').addEventListener('change', modal.updateTierDropdown);
-}
-
 function fetchData(token, media, tier, language, model) {
-
+  
   let url = null;
   let languageParam = `&language=${language}`;
   if (language === "xx") {
@@ -261,19 +274,25 @@ function fetchData(token, media, tier, language, model) {
     return response.json();
   })
   .then(json => {
-    console.dir(json);
 
     if (json.results.channels[0] === undefined || json.results.channels[0].alternatives[0].words.length === 0) {
-      displayNoWordsError();
+      document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><img src="'+errorSvg+'" width="50" alt="error" style="margin: auto; display: block;"><br/><center>Sorry.<br/>No words were detected.<br/>Please verify that audio contains speech.</center></div>';
     } else {
       parseData(json);
+      //document.querySelector("#summary").innerHTML = extractSummary(json);
+      //document.querySelector("#topics").innerHTML = extractTopics(json).join(", ");
+
+      language = getLanguageCode(json);
+
+      let track = document.querySelector('#hyperplayer-vtt');
+      track.label = language;
+      track.srcLang = language;
     }
   })
   .catch(function (error) {
-    console.dir("error is : "+error);
     error = error + "";
 
-    let errorDisplayed = displayError(error, tier);
+    let errorDisplayed = displayError(error);
     
     if (error.indexOf("400") > 0 && tier === "enhanced") {
       tier = "base";
@@ -286,7 +305,6 @@ function fetchData(token, media, tier, language, model) {
     }
 
     this.dataError = true;
-
     if (errorDisplayed === false) {
       displayGenericError();
     }
@@ -294,7 +312,6 @@ function fetchData(token, media, tier, language, model) {
 }
 
 function fetchDataLocal(token, file, tier, language, model) {
-
 
   let url = null;
   let languageParam = `&language=${language}`;
@@ -345,16 +362,23 @@ function fetchDataLocal(token, file, tier, language, model) {
         .then(json => {
           // check to see if any transcript data has come back before proceeding, give error message if not
           if (json.results.channels[0] === undefined || json.results.channels[0].alternatives[0].words.length === 0) {
-            displayNoWordsError();
+            document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><img src="'+errorSvg+'" width="50" alt="error" style="margin: auto; display: block;"><br/><center>Sorry.<br/>No words were detected.<br/>Please verify that audio contains speech.</center></div>';
           } else {
             parseData(json);
+            //document.querySelector("#summary").innerHTML = extractSummary(json);
+            //document.querySelector("#topics").innerHTML = extractTopics(json).join(", ");
+  
+            language = getLanguageCode(json);
+  
+            let track = document.querySelector('#hyperplayer-vtt');
+            track.label = language;
+            track.srcLang = language;
           }
         })
         .catch(function (error) {
-          console.dir("error is : "+error);
           error = error + "";
-      
-          let errorDisplayed = displayError(error, tier);
+
+          let errorDisplayed = displayError(error);
           
           if (error.indexOf("400") > 0 && tier === "enhanced") {
             tier = "base";
@@ -362,7 +386,6 @@ function fetchDataLocal(token, file, tier, language, model) {
           }
       
           this.dataError = true;
-
           if (errorDisplayed === false) {
             displayGenericError();
           }
@@ -374,26 +397,24 @@ function fetchDataLocal(token, file, tier, language, model) {
   });
 }
 
-function displayError(error, tier) {
+function displayError(error) {
+  console.log(error);
   if (error.indexOf("401") > 0 || (error.indexOf("400") > 0 && tier === "base")) {
     document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><img src="'+errorSvg+'" width="50" alt="error" style="margin: auto; display: block;"><br/><center>Sorry.<br/>It appears that the media URL does not exist<br/> or the token is invalid.</center></div>';
     return true;
   }
+
   if (error.indexOf("402") > 0) {
     document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><img src="'+errorSvg+'" width="50" alt="error" style="margin: auto; display: block;"><br/><center>Sorry.<br/>It appears that the token is invalid.</center></div>';
     return true;
   }
+
   return false;
 }
 
 function displayGenericError() {
   document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><img src="'+errorSvg+'" width="50" alt="error" style="margin: auto; display: block;"><br/><center>Sorry.<br/>An unexpected error has occurred.</center></div>';
 }
-
-function displayNoWordsError() {
-  document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><img src="'+errorSvg+'" width="50" alt="error" style="margin: auto; display: block;"><br/><center>Sorry.<br/>No words were detected.<br/>Please verify that audio contains speech.</center></div>';
-}
-
 
 function getLanguageCode(json){
   // prepare the VTT track so that the correct language is defined
@@ -427,20 +448,6 @@ function parseData(json) {
   let previousElementEnd = 0;
   let wordsInPara = 0;
   let showDiarization = true;
-
-  if (document.querySelector("#summary") !== null) {
-    document.querySelector("#summary").innerHTML = extractSummary(json);
-  }
-
-  if (document.querySelector("#topics") !== null) {
-    document.querySelector("#topics").innerHTML = extractTopics(json).join(", ");
-  }
-
-  language = getLanguageCode(json);
-  
-  let track = document.querySelector('#hyperplayer-vtt');
-  track.label = language;
-  track.srcLang = language;
 
   wordData.forEach((element, index) => {
 
@@ -496,8 +503,12 @@ function parseData(json) {
     });
   }
 
-  console.log("updating download html link");
-  document.querySelector('#download-html').setAttribute('href', 'data:text/html,'+encodeURIComponent(hyperTranscript));
+  const downloadHtml = document.querySelector('#download-html');
+
+  if (downloadHtml !== null) {
+    downloadHtml.setAttribute('href', 'data:text/html,'+encodeURIComponent(hyperTranscript));
+  }
+  //document.querySelector('#download-html').setAttribute('href', 'data:text/html,'+encodeURIComponent(hyperTranscript));
 
   const initEvent = new CustomEvent('hyperaudioInit');
   document.dispatchEvent(initEvent);
