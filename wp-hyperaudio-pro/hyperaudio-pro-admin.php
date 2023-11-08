@@ -52,8 +52,6 @@ function check_ajax( ) {
 			)
 		);
 
-    
-
 	// Otherwise, we'll stop
 	} else {
 
@@ -92,7 +90,7 @@ function hyperaudio_load_admin_script($hook)
   wp_enqueue_script('hyperaudio-lite', plugins_url('/js/hyperaudio-lite.js', __FILE__), false, '1.0.0', false);
   wp_enqueue_script('hyperaudio-lite-extension', plugins_url('/js/hyperaudio-lite-extension.js', __FILE__), false, '1.0.0', false);
 
-  wp_enqueue_script('deepgram', plugins_url('/js/hyperaudio-lite-editor-deepgram.js', __FILE__), false, '1.0.0', false);
+  wp_enqueue_script('deepgram', plugins_url('/js/hyperaudio-lite-editor-deepgram.js', __FILE__), false, '1.0.1', false);
   /*wp_enqueue_script('export', plugins_url('/js/hyperaudio-lite-editor-export.js', __FILE__), false, '1.0.0', false);*/
   /*wp_enqueue_script('storage', plugins_url('/js/hyperaudio-lite-editor-storage.js', __FILE__), false, '1.0.0', false);*/
   wp_enqueue_script('push-notification', plugins_url('/js/hyperaudio-push-notification.js', __FILE__), false, '1.0.0', false);
@@ -101,12 +99,16 @@ function hyperaudio_load_admin_script($hook)
 
   /*wp_enqueue_script('tailwind', 'https://cdn.tailwindcss.com', false, '1.0.0', false);*/
 
+  
+
 }
 
 add_action('admin_enqueue_scripts', 'hyperaudio_load_admin_script', 20);
 
 function hyperaudio_options_page() 
 {// Output the options page
+
+
   ?>
 
   <!--<link rel="stylesheet" href="css/hyperaudio-lite-player.css">-->
@@ -212,6 +214,48 @@ html,
    <!--<link rel="stylesheet" href="css/hyperaudio-lite-editor.css">-->
 </head>
 <body data-theme="light" style="height:100%">
+  <div id="deepgram-modal-template" style="display:none">
+    <button id="close-transcribe-button" style="float:right; text-decoration:none; border: 0; background-color: #fff">&#x2715;</button>
+      <form id="deepgram-form" name="deepgram-form">
+        <div>
+
+          <h3 class="font-bold text-lg">Transcribe</h3>
+          <input id="token" type="text" placeholder="Deepgram token"  />
+
+          <hr/>
+
+          <input id="media" type="text" placeholder="Link to media" />
+          <span class="label-text">or</span>
+          <input id="file" name="file" type="file" />
+
+          <hr/>
+
+          <span class="label-text">Model</span>
+          <select id="language-model" name="language-model" placeholder="language-model">
+          </select>
+
+          <hr/>
+
+          <span class="label-text">Language</span>
+          <select id="language" name="language" placeholder="language">
+          </select>
+
+          <hr/>
+
+          <span class="label-text">Quality</span>
+          <select id="tier" name="tier" placeholder="tier">
+            <option value="base">Base</option>
+            <option value="enhanced">Enhanced (Better)</option>
+            <option value="nova">Nova (Best)</option>
+          </select>
+
+        </div>
+        <hr/>
+        <div class="modal-action">
+          <button id="transcribe-btn" style="float:right">Transcribe</button>
+        </div>
+      </form>
+  </div>
   <div class="container">
     <div class="side-panel">
       <div>
@@ -252,7 +296,7 @@ html,
 
 
         <dialog id="deepgram-dialog">
-          <deepgram-service></deepgram-service>
+          <deepgram-service templateSelector="#deepgram-modal-template"></deepgram-service>
         </dialog>
 
         <dialog id="captions-modal" style="position: absolute; top: 58px; left:calc(100% - 390px);" >
@@ -656,6 +700,8 @@ html,
   <script src="js/caption.js"></script>-->
   <script>
 
+  console.log("template dir");
+  console.log("<?= get_bloginfo("url"); ?>"+"/wp-content/plugins/wp-hyperaudio-pro/");
 
   let updateCaptionsFromTranscript = true;
 
@@ -1094,6 +1140,8 @@ html,
       <div class="divider"></div> 
     </div>
   </div>
+
+  
 
 
   <!--<script src="./js/hyperaudio-lite-editor-storage.js"></script>-->
