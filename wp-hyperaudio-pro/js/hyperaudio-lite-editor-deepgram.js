@@ -1,5 +1,5 @@
 /*! (C) The Hyperaudio Project. MIT @license: en.wikipedia.org/wiki/MIT_License. */
-/*! Version 1.0.2 */
+/*! Version 1.0.3 */
 
 class DeepgramService extends HTMLElement {
 
@@ -154,7 +154,7 @@ class DeepgramService extends HTMLElement {
       event.preventDefault();
     }
 
-    document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><center>Transcribing....</center><br/><img src="'+transcribingSvg+'" width="50" alt="transcribing" style="margin: auto; display: block;"></div>';
+    document.querySelector('#hypertranscript').innerHTML = '<div class="vertically-centre"><center class="transcribing-msg">Transcribing....</center><br/><img src="'+transcribingSvg+'" width="50" alt="transcribing" style="margin: auto; display: block;"></div>';
     const language = document.querySelector('#language').value;
     const model = document.querySelector('#language-model').value;
     let media =  document.querySelector('#media').value;
