@@ -124,22 +124,21 @@ function hyperaudio_options_page()
 
   <style>
 
-html,
-      body {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-      }
-      body > * {
-        flex-shrink: 0;
-      }
-      .div1 {
-        background-color: #5c88ed;
-      }
-      .div2 {
-        background-color: #90de90;
-        flex-grow: 1;
-      }
+    html, body {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    body > * {
+      flex-shrink: 0;
+    }
+    .div1 {
+      background-color: #5c88ed;
+    }
+    .div2 {
+      background-color: #90de90;
+      flex-grow: 1;
+    }
 
     
 
@@ -184,6 +183,8 @@ html,
       overflow-y:scroll;
       flex-grow: 1;
       border: 4px black;
+      min-height: 600px;
+      margin-top: 20px;
     }
 
     .hyperaudio-transcript {
@@ -192,7 +193,7 @@ html,
       padding-left: 20px;
       padding-right: 20px;
       overflow: auto;
-      max-height: 100vh;
+      max-height: 80vh;
     }
 
     /*[contenteditable]:focus {
@@ -208,6 +209,10 @@ html,
       margin:10px; 
       font-size:150%; 
       width:360px;
+    }
+
+    .transcribing-msg {
+      font-size: 120%;
     }
     
   </style>
