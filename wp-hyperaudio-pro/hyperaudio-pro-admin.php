@@ -335,6 +335,7 @@ function hyperaudio_options_page()
               <option value="soundcloud">Soundcloud Embed</option>
               <option value="vimeo">Vimeo Embed</option>
               <option value="videojs">VideoJS Player</option>
+              <option value="spotify">Spotify Embed</option>
             </select>
             <hr>
             <h3>Optional Details <span style="font-size:80%; float:right;"><a href id="publish-show-options" onclick="this.style.display = 'none'; document.querySelector('#publish-optional-details').style.display = 'block'; document.querySelector('#publish-hide-options').style.display = 'block'; return false;";>show</a><a href id="publish-hide-options" style="display:none" onclick="this.style.display = 'none'; document.querySelector('#publish-optional-details').style.display = 'none'; document.querySelector('#publish-show-options').style.display = 'block'; return false;";>hide</a></span></h3>
